@@ -1,0 +1,4 @@
+Clock assumptions:
+- clk_100m: 100 MHz system clock
+- adc_valid asserted at 30 MHz sample rate or lower
+If adc_valid is continuous at 30 MHz, ensure CDC handling if adc_data is not synchronous to clk_100m.
