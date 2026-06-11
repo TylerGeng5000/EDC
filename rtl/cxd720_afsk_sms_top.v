@@ -1,12 +1,13 @@
 `timescale 1ns / 1ps
 
 module cxd720_afsk_sms_top #(
-    parameter CLK_HZ    = 100000000,
-    parameter UART_BAUD = 9600,
-    parameter AFSK_BAUD = 1200,
-    parameter MARK_HZ   = 1200,
-    parameter SPACE_HZ  = 2200,
-    parameter MAX_BYTES = 160
+    parameter CLK_HZ             = 100000000,
+    parameter UART_BAUD          = 9600,
+    parameter AFSK_BAUD          = 1200,
+    parameter MARK_HZ            = 1200,
+    parameter SPACE_HZ           = 2200,
+    parameter MAX_BYTES          = 160,
+    parameter REPEAT_INTERVAL_MS = 500
 )(
     input  wire        clk_100m_in,
     input  wire        rst,
@@ -42,6 +43,7 @@ module cxd720_afsk_sms_top #(
     wire       bit_value;
     wire       tx_active;
     wire       uart_tx_busy;
+    wire       repeat_busy;
     wire [7:0] dac_sample_8;
 
     assign clk = clk_100m_in;
@@ -71,8 +73,8 @@ module cxd720_afsk_sms_top #(
     assign led[4] = packet_done;
     assign led[5] = rx_valid;
     assign led[6] = uart_tx_busy;
-    assign led[7] = key[1];
-    assign led[8] = key[2];
+    assign led[7] = repeat_busy;
+    assign led[8] = key[1];
 
     uart_rx #(
         .CLK_HZ(CLK_HZ),
@@ -98,7 +100,9 @@ module cxd720_afsk_sms_top #(
     );
 
     message_controller #(
-        .MAX_BYTES(MAX_BYTES)
+        .CLK_HZ(CLK_HZ),
+        .MAX_BYTES(MAX_BYTES),
+        .REPEAT_INTERVAL_MS(REPEAT_INTERVAL_MS)
     ) u_message_controller (
         .clk(clk),
         .rst_n(rst_n),
@@ -111,7 +115,7 @@ module cxd720_afsk_sms_top #(
         .tx_addr(msg_addr),
         .char_count(char_count),
         .overflow(overflow),
-        .busy()
+        .busy(repeat_busy)
     );
 
     afsk_packet_encoder #(

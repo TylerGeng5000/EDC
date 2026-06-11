@@ -22,6 +22,11 @@ module afsk_packet_encoder #(
     localparam [2:0] ST_LENGTH   = 3'd3;
     localparam [2:0] ST_PAYLOAD  = 3'd4;
     localparam [2:0] ST_CHECKSUM = 3'd5;
+    localparam [2:0] ST_END      = 3'd6;
+
+    localparam [7:0] PREAMBLE_BYTE = 8'h55;
+    localparam [7:0] START_BYTE    = 8'h7e;
+    localparam [7:0] END_BYTE      = 8'h7f;
 
     reg [7:0] payload [0:MAX_BYTES-1];
     reg [2:0] state;
@@ -75,7 +80,7 @@ module afsk_packet_encoder #(
                         loading      <= 1'b0;
                         tx_active    <= 1'b1;
                         state        <= ST_PREAMBLE;
-                        byte_data    <= 8'h55;
+                        byte_data    <= PREAMBLE_BYTE;
                         bit_value    <= 1'b1;
                         bit_idx      <= 3'd0;
                         preamble_idx <= 8'd0;
@@ -91,11 +96,12 @@ module afsk_packet_encoder #(
                     case (state)
                         ST_PREAMBLE: begin
                             if (preamble_idx == (PREAMBLE_BYTES - 1)) begin
-                                next_byte    = 8'h7e;
+                                next_byte    = START_BYTE;
                                 preamble_idx <= 8'd0;
                                 state        <= ST_SYNC;
                             end else begin
-                                next_byte    = 8'h55;
+                                next_byte    = PREAMBLE_BYTE;
+
                                 preamble_idx <= preamble_idx + 8'd1;
                             end
                             byte_data <= next_byte;
@@ -131,6 +137,13 @@ module afsk_packet_encoder #(
                         end
 
                         ST_CHECKSUM: begin
+                            next_byte  = END_BYTE;
+                            byte_data  <= next_byte;
+                            bit_value  <= next_byte[0];
+                            state      <= ST_END;
+                        end
+
+                        ST_END: begin
                             tx_active   <= 1'b0;
                             bit_value   <= 1'b1;
                             packet_done <= 1'b1;

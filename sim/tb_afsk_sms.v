@@ -28,7 +28,8 @@ module tb_afsk_sms;
         .AFSK_BAUD(1200),
         .MARK_HZ(1200),
         .SPACE_HZ(2200),
-        .MAX_BYTES(160)
+        .MAX_BYTES(160),
+        .REPEAT_INTERVAL_MS(5)
     ) dut (
         .clk_100m_in(clk_100m_in),
         .rst(rst),
@@ -82,6 +83,11 @@ module tb_afsk_sms;
 
         wait (led[1] == 1'b1);
         wait (led[1] == 1'b0);
+        wait (led[1] == 1'b1);
+        wait (led[1] == 1'b0);
+
+        send_uart_byte(8'h18);
+        wait (led[7] == 1'b0);
         #(200000);
         $finish;
     end
