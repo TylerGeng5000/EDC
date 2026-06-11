@@ -1,2 +1,0 @@
-FFT config uses s_axis_config_tdata=16'h0001 as a placeholder.
-Update this based on the Xilinx FFT IP configuration (direction/scale).
