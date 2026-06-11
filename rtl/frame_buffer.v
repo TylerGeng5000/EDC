@@ -1,27 +1,41 @@
 module frame_buffer #(
-    parameter int N = 1024
+    parameter integer N = 1024
 ) (
-    input  logic              clk,
-    input  logic              rst,
-    input  logic signed [15:0] sample,
-    input  logic              sample_valid,
-    input  logic              fft_ready,
-    output logic signed [15:0] fft_sample,
-    output logic              fft_valid,
-    output logic              fft_last
+    input  wire               clk,
+    input  wire               rst,
+    input  wire signed [15:0] sample,
+    input  wire               sample_valid,
+    input  wire               fft_ready,
+    output reg signed [15:0]  fft_sample,
+    output reg                fft_valid,
+    output reg                fft_last
 );
-    typedef enum logic [0:0] {CAPTURE, OUTPUT} state_t;
-    state_t state;
+    function integer clog2;
+        input integer value;
+        integer i;
+        begin
+            clog2 = 0;
+            for (i = value - 1; i > 0; i = i >> 1) begin
+                clog2 = clog2 + 1;
+            end
+        end
+    endfunction
 
-    logic [$clog2(N)-1:0] wr_ptr;
-    logic [$clog2(N)-1:0] rd_ptr;
-    logic signed [15:0] mem [0:N-1];
+    localparam CAPTURE = 1'b0;
+    localparam OUTPUT  = 1'b1;
+    localparam integer ADDR_W = clog2(N);
 
-    always_ff @(posedge clk) begin
+    reg state;
+    reg [ADDR_W-1:0] wr_ptr;
+    reg [ADDR_W-1:0] rd_ptr;
+    reg signed [15:0] mem [0:N-1];
+
+    always @(posedge clk) begin
         if (rst) begin
             state <= CAPTURE;
-            wr_ptr <= '0;
-            rd_ptr <= '0;
+            wr_ptr <= {ADDR_W{1'b0}};
+            rd_ptr <= {ADDR_W{1'b0}};
+            fft_sample <= 16'sd0;
             fft_valid <= 1'b0;
             fft_last <= 1'b0;
         end else begin
@@ -31,29 +45,29 @@ module frame_buffer #(
                 CAPTURE: begin
                     if (sample_valid) begin
                         mem[wr_ptr] <= sample;
-                        if (wr_ptr == N-1) begin
-                            wr_ptr <= '0;
-                            rd_ptr <= '0;
+                        if (wr_ptr == (N - 1)) begin
+                            wr_ptr <= {ADDR_W{1'b0}};
+                            rd_ptr <= {ADDR_W{1'b0}};
                             state <= OUTPUT;
                         end else begin
                             wr_ptr <= wr_ptr + 1'b1;
                         end
                     end
                 end
+
                 OUTPUT: begin
                     if (fft_ready) begin
                         fft_sample <= mem[rd_ptr];
                         fft_valid <= 1'b1;
-                        fft_last <= (rd_ptr == N-1);
-                        if (rd_ptr == N-1) begin
-                            rd_ptr <= '0;
+                        fft_last <= (rd_ptr == (N - 1));
+                        if (rd_ptr == (N - 1)) begin
+                            rd_ptr <= {ADDR_W{1'b0}};
                             state <= CAPTURE;
                         end else begin
                             rd_ptr <= rd_ptr + 1'b1;
                         end
                     end
                 end
-                default: state <= CAPTURE;
             endcase
         end
     end

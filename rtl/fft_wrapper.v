@@ -1,16 +1,16 @@
 module fft_wrapper (
-    input  logic        clk,
-    input  logic        rst,
-    input  logic [31:0] s_axis_tdata,
-    input  logic        s_axis_tvalid,
-    input  logic        s_axis_tlast,
-    output logic        s_axis_tready,
-    input  logic [15:0] s_axis_config_tdata,
-    input  logic        s_axis_config_tvalid,
-    output logic        s_axis_config_tready,
-    output logic [31:0] m_axis_tdata,
-    output logic        m_axis_tvalid,
-    output logic        m_axis_tlast
+    input  wire        clk,
+    input  wire        rst,
+    input  wire [31:0] s_axis_tdata,
+    input  wire        s_axis_tvalid,
+    input  wire        s_axis_tlast,
+    output wire        s_axis_tready,
+    input  wire [15:0] s_axis_config_tdata,
+    input  wire        s_axis_config_tvalid,
+    output wire        s_axis_config_tready,
+    output wire [31:0] m_axis_tdata,
+    output wire        m_axis_tvalid,
+    output wire        m_axis_tlast
 );
     // Replace xfft_1024 with your generated Xilinx FFT IP name.
     xfft_1024 u_fft (

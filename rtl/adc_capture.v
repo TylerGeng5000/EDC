@@ -1,14 +1,14 @@
 module adc_capture (
-    input  logic        clk,
-    input  logic        rst,
-    input  logic [11:0] adc_data,
-    input  logic        adc_valid,
-    output logic signed [15:0] sample,
-    output logic        sample_valid
+    input  wire              clk,
+    input  wire              rst,
+    input  wire [11:0]       adc_data,
+    input  wire              adc_valid,
+    output reg signed [15:0] sample,
+    output reg               sample_valid
 );
-    always_ff @(posedge clk) begin
+    always @(posedge clk) begin
         if (rst) begin
-            sample <= '0;
+            sample <= 16'sd0;
             sample_valid <= 1'b0;
         end else begin
             sample_valid <= adc_valid;
