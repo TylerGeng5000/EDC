@@ -1,7 +1,5 @@
-rtl/adc_capture.v
-rtl/frame_buffer.v
-rtl/fft_wrapper.v
-rtl/feature_extract.v
-rtl/classifier.v
+rtl/uart_rx.v
+rtl/sms_packet_source.v
+rtl/afsk_sine_rom.v
+rtl/afsk_modulator.v
 rtl/top.v
-rtl/xfft_1024_stub.v
