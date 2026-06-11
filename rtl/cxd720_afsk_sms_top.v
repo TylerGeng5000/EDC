@@ -1,13 +1,18 @@
 `timescale 1ns / 1ps
 
 module cxd720_afsk_sms_top #(
+<<<<<<< codex/afsk-sozxe3
     parameter CLK_HZ    = 100000000,
+=======
+    parameter CLK_HZ    = 50000000,
+>>>>>>> main
     parameter UART_BAUD = 9600,
     parameter AFSK_BAUD = 1200,
     parameter MARK_HZ   = 1200,
     parameter SPACE_HZ  = 2200,
     parameter MAX_BYTES = 160
 )(
+
     input  wire        clk_100m_in,
     input  wire        rst,
     input  wire [4:1]  key,
@@ -28,6 +33,7 @@ module cxd720_afsk_sms_top #(
     wire       rst_n;
     wire       uart_rx;
     wire       uart_tx;
+
     wire [7:0] rx_data;
     wire       rx_valid;
     wire       msg_valid;
@@ -43,6 +49,7 @@ module cxd720_afsk_sms_top #(
     wire       tx_active;
     wire       uart_tx_busy;
     wire [7:0] dac_sample;
+
 
     assign clk = clk_100m_in;
     assign rst_n = rst;
@@ -72,6 +79,7 @@ module cxd720_afsk_sms_top #(
     assign led[6] = key[2];
     assign led[7] = key[3];
     assign led[8] = key[4];
+
 
     uart_rx #(
         .CLK_HZ(CLK_HZ),

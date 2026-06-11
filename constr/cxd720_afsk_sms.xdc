@@ -1,3 +1,4 @@
+
 ## CXD720 board constraints for cxd720_afsk_sms_top
 ## TJC serial screen mapping used by the RTL:
 ##   ext[3] (D21) = screen TX -> FPGA UART RX
@@ -128,3 +129,4 @@ set_property -dict {PACKAGE_PIN AA15 IOSTANDARD LVCMOS33} [get_ports {ext[35]}]
 set_property -dict {PACKAGE_PIN AB15 IOSTANDARD LVCMOS33} [get_ports {ext[36]}]
 set_property -dict {PACKAGE_PIN AA14 IOSTANDARD LVCMOS33} [get_ports {ext[37]}]
 set_property -dict {PACKAGE_PIN AB13 IOSTANDARD LVCMOS33} [get_ports {ext[38]}]
+>>>>>>> main
