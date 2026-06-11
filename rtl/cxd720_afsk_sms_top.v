@@ -1,22 +1,39 @@
 `timescale 1ns / 1ps
 
 module cxd720_afsk_sms_top #(
+<<<<<<< codex/afsk-sozxe3
+    parameter CLK_HZ    = 100000000,
+=======
     parameter CLK_HZ    = 50000000,
+>>>>>>> main
     parameter UART_BAUD = 9600,
     parameter AFSK_BAUD = 1200,
     parameter MARK_HZ   = 1200,
     parameter SPACE_HZ  = 2200,
     parameter MAX_BYTES = 160
 )(
-    input  wire       clk,
-    input  wire       rst_n,
-    input  wire       uart_rx,
-    output wire       uart_tx,
-    output wire [7:0] da_data,
-    output wire       da_clk,
-    output wire       afsk_busy,
-    output wire [3:0] led
+
+    input  wire        clk_100m_in,
+    input  wire        rst,
+    input  wire [4:1]  key,
+    output wire [8:1]  led,
+    output wire [3:0]  seg_s,
+    output wire [7:0]  seg_ap,
+    output wire        ad_clk,
+    input  wire [11:0] ad_din,
+    output wire        da1_clk,
+    output wire        da1_wrt,
+    output wire [13:0] da1_out,
+    output wire        da2_clk,
+    output wire        da2_wrt,
+    output wire [13:0] da2_out,
+    inout  wire [38:3] ext
 );
+    wire       clk;
+    wire       rst_n;
+    wire       uart_rx;
+    wire       uart_tx;
+
     wire [7:0] rx_data;
     wire       rx_valid;
     wire       msg_valid;
@@ -33,13 +50,36 @@ module cxd720_afsk_sms_top #(
     wire       uart_tx_busy;
     wire [7:0] dac_sample;
 
-    assign da_clk = clk;
-    assign da_data = dac_sample;
-    assign afsk_busy = tx_active;
-    assign led[0] = tx_active;
-    assign led[1] = (char_count != 8'd0);
-    assign led[2] = overflow;
-    assign led[3] = packet_done;
+
+    assign clk = clk_100m_in;
+    assign rst_n = rst;
+
+    assign uart_rx = ext[3];
+    assign ext[4] = uart_tx;
+    assign ext[3] = 1'bz;
+    assign ext[38:5] = 34'bz;
+
+    assign da1_clk = clk;
+    assign da1_wrt = clk;
+    assign da1_out = {dac_sample, 6'b000000};
+
+    assign da2_clk = clk;
+    assign da2_wrt = clk;
+    assign da2_out = 14'd8192;
+
+    assign ad_clk = clk;
+    assign seg_s = 4'b1111;
+    assign seg_ap = 8'hff;
+
+    assign led[1] = tx_active;
+    assign led[2] = (char_count != 8'd0);
+    assign led[3] = overflow;
+    assign led[4] = packet_done;
+    assign led[5] = key[1];
+    assign led[6] = key[2];
+    assign led[7] = key[3];
+    assign led[8] = key[4];
+
 
     uart_rx #(
         .CLK_HZ(CLK_HZ),

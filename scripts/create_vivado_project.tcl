@@ -1,9 +1,11 @@
 # Run from the repository root with:
 #   vivado -mode batch -source scripts/create_vivado_project.tcl
 # Override device/project values when needed, for example:
-#   vivado -mode batch -source scripts/create_vivado_project.tcl -tclargs xc7a35tcsg324-1 cxd720_afsk_sms
 
-set part_name "xc7a35tcsg324-1"
+#   vivado -mode batch -source scripts/create_vivado_project.tcl -tclargs xc7a100tfgg484-2 cxd720_afsk_sms
+
+set part_name "xc7a100tfgg484-2"
+
 set project_name "cxd720_afsk_sms"
 if {$argc >= 1} { set part_name [lindex $argv 0] }
 if {$argc >= 2} { set project_name [lindex $argv 1] }

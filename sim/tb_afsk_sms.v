@@ -5,10 +5,22 @@ module tb_afsk_sms;
     reg rst_n;
     reg uart_rx_line;
     wire uart_tx_line;
-    wire [7:0] da_data;
-    wire da_clk;
-    wire afsk_busy;
-    wire [3:0] led;
+
+    wire [13:0] da1_out;
+    wire da1_clk;
+    wire da1_wrt;
+    wire [8:1] led;
+    wire [3:0] seg_s;
+    wire [7:0] seg_ap;
+    wire ad_clk;
+    wire da2_clk;
+    wire da2_wrt;
+    wire [13:0] da2_out;
+    wire [38:3] ext;
+
+    assign ext[3] = uart_rx_line;
+    assign uart_tx_line = ext[4];
+
 
     cxd720_afsk_sms_top #(
         .CLK_HZ(1000000),
@@ -18,14 +30,23 @@ module tb_afsk_sms;
         .SPACE_HZ(2200),
         .MAX_BYTES(160)
     ) dut (
-        .clk(clk),
-        .rst_n(rst_n),
-        .uart_rx(uart_rx_line),
-        .uart_tx(uart_tx_line),
-        .da_data(da_data),
-        .da_clk(da_clk),
-        .afsk_busy(afsk_busy),
-        .led(led)
+
+        .clk_100m_in(clk),
+        .rst(rst_n),
+        .key(4'b1111),
+        .led(led),
+        .seg_s(seg_s),
+        .seg_ap(seg_ap),
+        .ad_clk(ad_clk),
+        .ad_din(12'd0),
+        .da1_clk(da1_clk),
+        .da1_wrt(da1_wrt),
+        .da1_out(da1_out),
+        .da2_clk(da2_clk),
+        .da2_wrt(da2_wrt),
+        .da2_out(da2_out),
+        .ext(ext)
+
     );
 
     initial begin
@@ -59,8 +80,10 @@ module tb_afsk_sms;
         send_uart_byte("i");
         send_uart_byte(8'h0d);
 
-        wait (afsk_busy == 1'b1);
-        wait (afsk_busy == 1'b0);
+
+        wait (led[1] == 1'b1);
+        wait (led[1] == 1'b0);
+
         #(200000);
         $finish;
     end
