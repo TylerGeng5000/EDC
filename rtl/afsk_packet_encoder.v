@@ -22,6 +22,11 @@ module afsk_packet_encoder #(
     localparam [2:0] ST_LENGTH   = 3'd3;
     localparam [2:0] ST_PAYLOAD  = 3'd4;
     localparam [2:0] ST_CHECKSUM = 3'd5;
+    localparam [2:0] ST_END      = 3'd6;
+
+    localparam [7:0] PREAMBLE_BYTE = 8'h55;
+    localparam [7:0] START_BYTE    = 8'h7e;
+    localparam [7:0] END_BYTE      = 8'h7f;
 
     reg [7:0] payload [0:MAX_BYTES-1];
     reg [2:0] state;
@@ -31,6 +36,7 @@ module afsk_packet_encoder #(
     reg [2:0] bit_idx;
     reg [7:0] byte_idx;
     reg [7:0] preamble_idx;
+    reg [7:0] next_byte;
     reg       loading;
 
     integer i;
@@ -74,54 +80,69 @@ module afsk_packet_encoder #(
                         loading      <= 1'b0;
                         tx_active    <= 1'b1;
                         state        <= ST_PREAMBLE;
-                        byte_data    <= 8'h55;
+                        byte_data    <= PREAMBLE_BYTE;
+                        bit_value    <= 1'b1;
                         bit_idx      <= 3'd0;
                         preamble_idx <= 8'd0;
                         byte_idx     <= 8'd0;
                     end
                 end
             end else if (bit_tick) begin
-                bit_value <= byte_data[bit_idx];
-
                 if (bit_idx != 3'd7) begin
-                    bit_idx <= bit_idx + 3'd1;
+                    bit_idx   <= bit_idx + 3'd1;
+                    bit_value <= byte_data[bit_idx + 3'd1];
                 end else begin
                     bit_idx <= 3'd0;
                     case (state)
                         ST_PREAMBLE: begin
                             if (preamble_idx == (PREAMBLE_BYTES - 1)) begin
+                                next_byte    = START_BYTE;
                                 preamble_idx <= 8'd0;
-                                byte_data    <= 8'h7e;
                                 state        <= ST_SYNC;
                             end else begin
+                                next_byte    = PREAMBLE_BYTE;
                                 preamble_idx <= preamble_idx + 8'd1;
-                                byte_data    <= 8'h55;
                             end
+                            byte_data <= next_byte;
+                            bit_value <= next_byte[0];
                         end
 
                         ST_SYNC: begin
-                            byte_data <= expected_len;
-                            state     <= ST_LENGTH;
+                            next_byte  = expected_len;
+                            byte_data  <= next_byte;
+                            bit_value  <= next_byte[0];
+                            state      <= ST_LENGTH;
                         end
 
                         ST_LENGTH: begin
-                            byte_data <= payload[0];
-                            byte_idx  <= 8'd0;
-                            state     <= ST_PAYLOAD;
+                            next_byte  = payload[0];
+                            byte_data  <= next_byte;
+                            bit_value  <= next_byte[0];
+                            byte_idx   <= 8'd0;
+                            state      <= ST_PAYLOAD;
                         end
 
                         ST_PAYLOAD: begin
                             if ((byte_idx + 8'd1) == expected_len) begin
-                                byte_data <= checksum;
+                                next_byte = checksum;
                                 byte_idx  <= 8'd0;
                                 state     <= ST_CHECKSUM;
                             end else begin
+                                next_byte = payload[byte_idx + 8'd1];
                                 byte_idx  <= byte_idx + 8'd1;
-                                byte_data <= payload[byte_idx + 8'd1];
                             end
+                            byte_data <= next_byte;
+                            bit_value <= next_byte[0];
                         end
 
                         ST_CHECKSUM: begin
+                            next_byte  = END_BYTE;
+                            byte_data  <= next_byte;
+                            bit_value  <= next_byte[0];
+                            state      <= ST_END;
+                        end
+
+                        ST_END: begin
                             tx_active   <= 1'b0;
                             bit_value   <= 1'b1;
                             packet_done <= 1'b1;

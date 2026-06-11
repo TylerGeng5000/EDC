@@ -1,14 +1,26 @@
 `timescale 1ns / 1ps
 
 module tb_afsk_sms;
-    reg clk;
-    reg rst_n;
+    reg clk_100m_in;
+    reg rst;
     reg uart_rx_line;
     wire uart_tx_line;
-    wire [7:0] da_data;
-    wire da_clk;
-    wire afsk_busy;
-    wire [3:0] led;
+    reg [4:1] key;
+    wire [8:1] led;
+    wire [3:0] seg_s;
+    wire [7:0] seg_ap;
+    wire ad_clk;
+    reg [11:0] ad_din;
+    wire da1_clk;
+    wire da1_wrt;
+    wire [13:0] da1_out;
+    wire da2_clk;
+    wire da2_wrt;
+    wire [13:0] da2_out;
+    wire [38:3] ext;
+
+    assign ext[3] = uart_rx_line;
+    assign uart_tx_line = ext[4];
 
     cxd720_afsk_sms_top #(
         .CLK_HZ(1000000),
@@ -16,21 +28,29 @@ module tb_afsk_sms;
         .AFSK_BAUD(1200),
         .MARK_HZ(1200),
         .SPACE_HZ(2200),
-        .MAX_BYTES(160)
+        .MAX_BYTES(160),
+        .REPEAT_INTERVAL_MS(5)
     ) dut (
-        .clk(clk),
-        .rst_n(rst_n),
-        .uart_rx(uart_rx_line),
-        .uart_tx(uart_tx_line),
-        .da_data(da_data),
-        .da_clk(da_clk),
-        .afsk_busy(afsk_busy),
-        .led(led)
+        .clk_100m_in(clk_100m_in),
+        .rst(rst),
+        .key(key),
+        .led(led),
+        .seg_s(seg_s),
+        .seg_ap(seg_ap),
+        .ad_clk(ad_clk),
+        .ad_din(ad_din),
+        .da1_clk(da1_clk),
+        .da1_wrt(da1_wrt),
+        .da1_out(da1_out),
+        .da2_clk(da2_clk),
+        .da2_wrt(da2_wrt),
+        .da2_out(da2_out),
+        .ext(ext)
     );
 
     initial begin
-        clk = 1'b0;
-        forever #500 clk = ~clk;
+        clk_100m_in = 1'b0;
+        forever #500 clk_100m_in = ~clk_100m_in;
     end
 
     task send_uart_byte;
@@ -49,18 +69,25 @@ module tb_afsk_sms;
     endtask
 
     initial begin
-        rst_n = 1'b0;
+        rst = 1'b1;
+        key = 4'b1111;
+        ad_din = 12'd0;
         uart_rx_line = 1'b1;
         #(10000);
-        rst_n = 1'b1;
+        rst = 1'b0;
         #(10000);
 
         send_uart_byte("H");
         send_uart_byte("i");
         send_uart_byte(8'h0d);
 
-        wait (afsk_busy == 1'b1);
-        wait (afsk_busy == 1'b0);
+        wait (led[1] == 1'b1);
+        wait (led[1] == 1'b0);
+        wait (led[1] == 1'b1);
+        wait (led[1] == 1'b0);
+
+        send_uart_byte(8'h18);
+        wait (led[7] == 1'b0);
         #(200000);
         $finish;
     end
