@@ -101,6 +101,7 @@ module afsk_packet_encoder #(
                                 state        <= ST_SYNC;
                             end else begin
                                 next_byte    = PREAMBLE_BYTE;
+
                                 preamble_idx <= preamble_idx + 8'd1;
                             end
                             byte_data <= next_byte;
